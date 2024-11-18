@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Sort Tree Visualizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+  <h1 class="text-4xl font-bold mb-4">Quick Sort Tree Visualizer</h1>
+  <div id="info" class="text-lg mb-4"></div>
+  <div id="tree-container" class="bg-gray-800 rounded p-4 shadow-md">
+    <svg id="tree-svg" width="1200" height="800"></svg>
+  </div>
+  <div class="flex gap-4 mt-4">
+    <button
+      class="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold"
+      id="start-button"
+    >
+      Start Visualization
+    </button>
+    <button
+      class="px-6 py-2 bg-green-500 hover:bg-green-600 rounded text-white font-semibold"
+      id="play-button"
+      disabled
+    >
+      Play
+    </button>
+    <button
+      class="px-6 py-2 bg-red-500 hover:bg-red-600 rounded text-white font-semibold"
+      id="pause-button"
+      disabled
+    >
+      Pause
+    </button>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
