@@ -1,40 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick Sort Tree Visualizer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merge Sort Tree Visualizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
-  <h1 class="text-4xl font-bold mb-4">Quick Sort Tree Visualizer</h1>
-  <div id="info" class="text-lg mb-4"></div>
-  <div id="tree-container" class="bg-gray-800 rounded p-4 shadow-md">
-    <svg id="tree-svg" width="1200" height="800"></svg>
-  </div>
-  <div class="flex gap-4 mt-4">
+  <h1 class="text-3xl font-bold mb-4">Merge Sort Tree Visualizer</h1>
+  <div class="flex gap-4 mb-4">
     <button
       class="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold"
       id="start-button"
     >
       Start Visualization
     </button>
-    <button
-      class="px-6 py-2 bg-green-500 hover:bg-green-600 rounded text-white font-semibold"
-      id="play-button"
-      disabled
+    <select
+      id="speed-control"
+      class="px-4 py-2 rounded bg-gray-700 text-white font-semibold"
     >
-      Play
-    </button>
-    <button
-      class="px-6 py-2 bg-red-500 hover:bg-red-600 rounded text-white font-semibold"
-      id="pause-button"
-      disabled
-    >
-      Pause
-    </button>
+      <option value="4000">Slow</option>
+      <option value="2000" selected>Normal</option>
+      <option value="1000">Fast</option>
+    </select>
   </div>
-  <script src="script.js"></script>
+
+  <div class="flex flex-col lg:flex-row gap-4">
+    <div id="tree-container" class="bg-gray-800 rounded p-4 shadow-md w-full">
+      <svg id="tree-svg" width="1200" height="800"></svg>
+    </div>
+    <div id="info" class="text-lg bg-gray-800 p-4 rounded shadow-md w-full">
+      <h2 class="text-xl font-semibold mb-2">Steps</h2>
+      <ul id="steps-list" class="list-decimal list-inside text-sm"></ul>
+    </div>
+  </div>
+
+  <script>
+    const svg = d3.select("#tree-svg");
+    const infoBox = document.getElementById("info");
+    const stepsList = document.getElementById("steps-list");
+    const startButton = document.getElementById("start-button");
+    const speedControl = document.getElementById("speed-control");
+
+    let speed = parseInt(speedControl.value);
+    speedControl.addEventListener("change", () => {
+      speed = parseInt(speedControl.value);
+    });
+
+    const treeLayout = d3.tree().size([1100, 700]);
+    let stepNumber = 1;
+
+    function addStep(description) {
+      const li = document.createElement("li");
+      li.textContent = `Step ${stepNumber}: ${description}`;
+      stepsList.appendChild(li);
+      stepNumber++;
+    }
+
+    function drawTree(data) {
+      svg.selectAll("*").remove();
+
+      const root = d3.hierarchy(data);
+      treeLayout(root);
+
+      // Links
+      svg
+        .selectAll(".link")
+        .data(root.links())
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y + 50)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y + 50)
+        .style("stroke", "#ccc")
+        .style("stroke-width", 2);
+
+      // Nodes
+      const nodes = svg
+        .selectAll(".node")
+        .data(root.descendants())
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", (d) => `translate(${d.x}, ${d.y + 50})`);
+
+      nodes
+        .append("circle")
+        .attr("r", 20)
+        .style("fill", "#4f46e5")
+        .style("stroke", "#fff")
+        .style("stroke-width", 2);
+
+      nodes
+        .append("text")
+        .attr("dy", 5)
+        .attr("x", 0)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#fff")
+        .text((d) => `[${d.data.value.join(", ")}]`);
+
+      nodes
+        .append("text")
+        .attr("dy", 35)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#9ca3af")
+        .text((d) => (d.data.mid !== undefined ? `Mid: ${d.data.mid}` : ""));
+    }
+
+    let nodeId = 1;
+    async function mergeSort(array, node) {
+      node.value = array;
+      addStep(`Processing array [${array.join(", ")}]`);
+      drawTree(treeData);
+      await new Promise((resolve) => setTimeout(resolve, speed));
+
+      if (array.length <= 1) {
+        return array;
+      }
+
+      const mid = Math.floor(array.length / 2);
+      const left = array.slice(0, mid);
+      const right = array.slice(mid);
+
+      node.mid = array[mid];
+      const leftNode = { id: nodeId++, value: [], children: [] };
+      const rightNode = { id: nodeId++, value: [], children: [] };
+      node.children.push(leftNode, rightNode);
+
+      addStep(`Split into [${left.join(", ")}] and [${right.join(", ")}], Mid: ${array[mid]}`);
+      drawTree(treeData);
+      await new Promise((resolve) => setTimeout(resolve, speed));
+
+      const sortedLeft = await mergeSort(left, leftNode);
+      const sortedRight = await mergeSort(right, rightNode);
+
+      const merged = [];
+      let i = 0,
+        j = 0;
+
+      while (i < sortedLeft.length && j < sortedRight.length) {
+        if (sortedLeft[i] < sortedRight[j]) {
+          merged.push(sortedLeft[i++]);
+        } else {
+          merged.push(sortedRight[j++]);
+        }
+      }
+
+      while (i < sortedLeft.length) merged.push(sortedLeft[i++]);
+      while (j < sortedRight.length) merged.push(sortedRight[j++]);
+
+      addStep(`Merged [${sortedLeft.join(", ")}] and [${sortedRight.join(", ")}] into [${merged.join(", ")}]`);
+      node.value = merged;
+
+      drawTree(treeData);
+      await new Promise((resolve) => setTimeout(resolve, speed));
+
+      return merged;
+    }
+
+    const treeData = { id: 0, value: [], children: [] };
+
+    startButton.addEventListener("click", async () => {
+      stepsList.innerHTML = "";
+      stepNumber = 1;
+      const randomArray = Array.from({ length: 10 }, () =>
+        Math.floor(Math.random() * 50)
+      );
+      treeData.children = [];
+      nodeId = 1;
+      await mergeSort(randomArray, treeData);
+    });
+  </script>
 </body>
 </html>

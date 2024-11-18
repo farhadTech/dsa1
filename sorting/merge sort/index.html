@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merge Sort Tree Visualization</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center p-4 min-h-screen">
+  <h1 class="text-3xl font-bold mb-6">Merge Sort Tree Visualization</h1>
+
+  <button
+    id="start-button"
+    class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-semibold mb-6"
+  >
+    Start Visualization
+  </button>
+
+  <!-- Visualization Area -->
+  <div id="tree-container" class="w-full max-w-5xl h-[600px] bg-gray-800 relative"></div>
+
+  <script>
+    const width = 1000;
+    const height = 600;
+    const duration = 800;
+
+    // Create SVG container for the tree visualization
+    const svg = d3
+      .select("#tree-container")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", "translate(50, 50)");
+
+    const treeLayout = d3.tree().size([width - 100, height - 100]);
+    const rootGroup = svg.append("g");
+
+    // Generate random array
+    const generateRandomArray = (size = 8, maxValue = 50) =>
+      Array.from({ length: size }, () => Math.floor(Math.random() * maxValue) + 1);
+
+    // Render tree
+    function renderTree(data) {
+      const root = d3.hierarchy(data);
+      treeLayout(root);
+
+      // Links (edges)
+      const links = rootGroup
+        .selectAll(".link")
+        .data(root.links(), (d) => `${d.source.data.id}-${d.target.data.id}`);
+
+      // Enter new links
+      links
+        .enter()
+        .append("line")
+        .attr("class", "link")
+        .attr("stroke", "#ccc")
+        .attr("stroke-width", 2)
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.source.x)
+        .attr("y2", (d) => d.source.y)
+        .transition()
+        .duration(duration)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y);
+
+      // Update links
+      links
+        .transition()
+        .duration(duration)
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y);
+
+      // Remove old links
+      links.exit().remove();
+
+      // Nodes
+      const nodes = rootGroup
+        .selectAll(".node")
+        .data(root.descendants(), (d) => d.data.id);
+
+      // Enter new nodes
+      const nodeEnter = nodes.enter().append("g").attr("class", "node");
+
+      nodeEnter
+        .append("circle")
+        .attr("r", 20)
+        .attr("fill", "#4f46e5")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2)
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y);
+
+      nodeEnter
+        .append("text")
+        .attr("fill", "#fff")
+        .attr("font-size", 12)
+        .attr("x", (d) => d.x)
+        .attr("y", (d) => d.y - 30)
+        .attr("text-anchor", "middle")
+        .text((d) => `[${d.data.value.join(", ")}]`);
+
+      // Update nodes
+      nodes
+        .select("circle")
+        .transition()
+        .duration(duration)
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y);
+
+      nodes
+        .select("text")
+        .transition()
+        .duration(duration)
+        .attr("x", (d) => d.x)
+        .attr("y", (d) => d.y - 30);
+
+      // Remove old nodes
+      nodes.exit().remove();
+    }
+
+    // Merge Sort with Tree Visualization
+    async function mergeSort(array, id = 0, parentId = null, data = {}) {
+      const currentNode = { id, value: array, children: [] };
+
+      if (parentId !== null) {
+        data.children[parentId].children.push(currentNode);
+      } else {
+        data.children = [currentNode];
+      }
+
+      renderTree(data);
+
+      if (array.length <= 1) {
+        await new Promise((resolve) => setTimeout(resolve, duration));
+        return array;
+      }
+
+      const mid = Math.floor(array.length / 2);
+      const left = array.slice(0, mid);
+      const right = array.slice(mid);
+
+      // Show split
+      await new Promise((resolve) => setTimeout(resolve, duration));
+
+      const sortedLeft = await mergeSort(left, id * 2 + 1, id, data);
+      const sortedRight = await mergeSort(right, id * 2 + 2, id, data);
+
+      const merged = [];
+      let i = 0,
+        j = 0;
+
+      while (i < sortedLeft.length && j < sortedRight.length) {
+        if (sortedLeft[i] < sortedRight[j]) {
+          merged.push(sortedLeft[i++]);
+        } else {
+          merged.push(sortedRight[j++]);
+        }
+      }
+
+      while (i < sortedLeft.length) merged.push(sortedLeft[i++]);
+      while (j < sortedRight.length) merged.push(sortedRight[j++]);
+
+      // Update current node with merged array
+      currentNode.value = merged;
+
+      renderTree(data);
+
+      await new Promise((resolve) => setTimeout(resolve, duration));
+      return merged;
+    }
+
+    // Start Visualization
+    document.getElementById("start-button").addEventListener("click", async () => {
+      const randomArray = generateRandomArray(8, 50);
+      const data = {};
+      await mergeSort(randomArray, 0, null, data);
+    });
+  </script>
+</body>
+</html>

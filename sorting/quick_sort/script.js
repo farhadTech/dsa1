@@ -1,5 +1,6 @@
 // Utility function: Sleep for animations, pauses when `paused` is true
 let paused = false;
+let visualizationSpeed = 2000; // Default speed
 
 const sleep = async (ms) => {
   while (paused) {
@@ -93,7 +94,7 @@ async function quickSort(array, treeData, parentNode, level = 0, infoElement) {
 
   // Render tree and wait
   renderTree(treeData, currentNode);
-  await sleep(1500);
+  await sleep(visualizationSpeed);
 
   const sortedLeft = await quickSort(left, treeData, currentNode, level + 1, infoElement);
   const sortedRight = await quickSort(right, treeData, currentNode, level + 1, infoElement);
@@ -106,6 +107,7 @@ const infoElement = document.getElementById("info");
 const startButton = document.getElementById("start-button");
 const playButton = document.getElementById("play-button");
 const pauseButton = document.getElementById("pause-button");
+const speedControl = document.getElementById("speed-control");
 
 // Event Listeners
 startButton.addEventListener("click", async () => {
@@ -134,4 +136,9 @@ pauseButton.addEventListener("click", () => {
   paused = true;
   playButton.disabled = false;
   pauseButton.disabled = true;
+});
+
+// Update visualization speed based on user input
+speedControl.addEventListener("change", (event) => {
+  visualizationSpeed = parseInt(event.target.value, 10); // Update speed
 });
