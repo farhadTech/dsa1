@@ -6,20 +6,13 @@
 		<title>Insertion Sort Visualization</title>
 		<script src="https://cdn.tailwindcss.com"></script>
 	</head>
-	<body
-		class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen"
-	>
+	<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
 		<h1 class="text-2xl font-bold mb-4">Insertion Sort Visualization</h1>
 
 		<!-- Array Length Control -->
 		<div class="mb-4">
-			<label for="array-size" class="text-lg font-semibold"
-				>Select Array Size:
-			</label>
-			<select
-				id="array-size"
-				class="bg-gray-800 text-white px-4 py-2 rounded-lg"
-			>
+			<label for="array-size" class="text-lg font-semibold">Select Array Size:</label>
+			<select id="array-size" class="bg-gray-800 text-white px-4 py-2 rounded-lg">
 				<option value="6">6</option>
 				<option value="10">10</option>
 				<option value="15">15</option>
@@ -27,13 +20,18 @@
 			</select>
 		</div>
 
-		<!-- Button to Start Visualization -->
-		<button
-			id="visualize-btn"
-			class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-semibold mb-4"
-		>
-			Visualize
-		</button>
+		<!-- Control Buttons -->
+		<div class="mb-4 flex gap-4">
+			<button id="visualize-btn" class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-semibold">
+				Visualize
+			</button>
+			<button id="play-btn" class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-semibold hidden">
+				Play
+			</button>
+			<button id="pause-btn" class="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-semibold hidden">
+				Pause
+			</button>
+		</div>
 
 		<!-- Box Visualization -->
 		<div class="mb-80">
@@ -44,11 +42,8 @@
 		</div>
 
 		<!-- Bar Visualization -->
-		<div class="">
-			<div
-				id="sorting-container-bars"
-				class="flex gap-1 items-end h-64 w-full max-w-xl mx-auto"
-			>
+		<div>
+			<div id="sorting-container-bars" class="flex gap-1 items-end h-64 w-full max-w-xl mx-auto">
 				<!-- Bars will be dynamically generated here -->
 			</div>
 			<h2 class="mt-4 text-xl font-semibold">Bar Visualization</h2>
@@ -68,6 +63,11 @@
 			const containerBars = document.getElementById("sorting-container-bars");
 			const arraySizeSelect = document.getElementById("array-size");
 			const visualizeBtn = document.getElementById("visualize-btn");
+			const playBtn = document.getElementById("play-btn");
+			const pauseBtn = document.getElementById("pause-btn");
+
+			let isPaused = false;
+			let currentArray = [];
 
 			// Function to create boxes for the array
 			function createBoxes(array, highlightIndex = -1, sorted = -1) {
@@ -133,6 +133,11 @@
 					createBoxes(arr, -1, j); // Update sorted portion for boxes
 					createBars(arr); // Update bars after placing the key
 					await new Promise((resolve) => setTimeout(resolve, 500)); // Delay
+
+					// Check if paused, if so, stop the sorting
+					if (isPaused) {
+						break;
+					}
 				}
 			}
 
@@ -157,8 +162,29 @@
 				createBoxes(newArray);
 				createBars(newArray);
 
+				// Show Play/Pause buttons after starting
+				visualizeBtn.classList.add("hidden");
+				playBtn.classList.remove("hidden");
+				pauseBtn.classList.remove("hidden");
+
 				// Start sorting with the new array
+				currentArray = newArray;
 				insertionSort(newArray);
+			}
+
+			// Function to handle Play button click
+			function playSorting() {
+				isPaused = false;
+				insertionSort(currentArray); // Continue sorting from where it was paused
+				playBtn.classList.add("hidden");
+				pauseBtn.classList.remove("hidden");
+			}
+
+			// Function to handle Pause button click
+			function pauseSorting() {
+				isPaused = true;
+				playBtn.classList.remove("hidden");
+				pauseBtn.classList.add("hidden");
 			}
 
 			// Listen for changes in array size
@@ -166,6 +192,10 @@
 
 			// Start visualization when the "Visualize" button is clicked
 			visualizeBtn.addEventListener("click", startVisualization);
+
+			// Play and Pause buttons
+			playBtn.addEventListener("click", playSorting);
+			pauseBtn.addEventListener("click", pauseSorting);
 
 			// Initialize the page with a default random array of size 6
 			handleArraySizeChange();
