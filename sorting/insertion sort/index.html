@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Insertion Sort Visualization</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body
+		class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen"
+	>
+		<h1 class="text-2xl font-bold mb-4">Insertion Sort Visualization</h1>
+
+		<!-- Array Length Control -->
+		<div class="mb-4">
+			<label for="array-size" class="text-lg font-semibold"
+				>Select Array Size:
+			</label>
+			<select
+				id="array-size"
+				class="bg-gray-800 text-white px-4 py-2 rounded-lg"
+			>
+				<option value="6">6</option>
+				<option value="10">10</option>
+				<option value="15">15</option>
+				<option value="20">20</option>
+			</select>
+		</div>
+
+		<!-- Button to Start Visualization -->
+		<button
+			id="visualize-btn"
+			class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-semibold mb-4"
+		>
+			Visualize
+		</button>
+
+		<!-- Box Visualization -->
+		<div class="mb-80">
+			<h2 class="mb-4 text-xl font-semibold">Box Visualization</h2>
+			<div id="sorting-container-boxes" class="flex gap-4 mb-4">
+				<!-- Boxes will be dynamically generated here -->
+			</div>
+		</div>
+
+		<!-- Bar Visualization -->
+		<div class="">
+			<div
+				id="sorting-container-bars"
+				class="flex gap-1 items-end h-64 w-full max-w-xl mx-auto"
+			>
+				<!-- Bars will be dynamically generated here -->
+			</div>
+			<h2 class="mt-4 text-xl font-semibold">Bar Visualization</h2>
+		</div>
+
+		<script>
+			// Function to generate a random array of specified length
+			function generateRandomArray(length) {
+				const array = [];
+				for (let i = 0; i < length; i++) {
+					array.push(Math.floor(Math.random() * 100) - 50); // Random numbers between -50 and 50
+				}
+				return array;
+			}
+
+			const containerBoxes = document.getElementById("sorting-container-boxes");
+			const containerBars = document.getElementById("sorting-container-bars");
+			const arraySizeSelect = document.getElementById("array-size");
+			const visualizeBtn = document.getElementById("visualize-btn");
+
+			// Function to create boxes for the array
+			function createBoxes(array, highlightIndex = -1, sorted = -1) {
+				containerBoxes.innerHTML = ""; // Clear existing boxes
+
+				array.forEach((value, index) => {
+					const box = document.createElement("div");
+					box.className = `flex items-center justify-center w-16 h-16 text-lg font-bold
+          ${index <= sorted ? "bg-green-500" : "bg-blue-500"}
+          ${index === highlightIndex ? "ring-4 ring-yellow-300" : ""}`;
+					box.textContent = value;
+					containerBoxes.appendChild(box);
+				});
+			}
+
+			// Function to create bars with values
+			function createBars(array, highlightIndex = -1) {
+				containerBars.innerHTML = ""; // Clear existing bars
+
+				array.forEach((value, index) => {
+					const barContainer = document.createElement("div");
+					barContainer.className = "flex flex-col items-center";
+
+					const barValue = document.createElement("span");
+					barValue.className = `text-white text-sm mb-1 ${
+						index === highlightIndex ? "text-yellow-300" : ""
+					}`;
+					barValue.textContent = value;
+
+					const bar = document.createElement("div");
+					bar.className = `bg-blue-500 transition-all duration-200 ease-in-out ${
+						index === highlightIndex ? "bg-yellow-500" : ""
+					}`;
+					bar.style.height = `${Math.abs(value) * 10}px`;
+					bar.style.width = "30px";
+
+					barContainer.appendChild(barValue);
+					barContainer.appendChild(bar);
+					containerBars.appendChild(barContainer);
+				});
+			}
+
+			// Insertion Sort with visualization
+			async function insertionSort(arr) {
+				for (let j = 1; j < arr.length; j++) {
+					let i = j - 1;
+					let key = arr[j];
+
+					// Highlight the key element
+					createBoxes(arr, j, j - 1);
+					createBars(arr, j);
+					await new Promise((resolve) => setTimeout(resolve, 500)); // Delay
+
+					while (i >= 0 && arr[i] > key) {
+						arr[i + 1] = arr[i];
+						createBoxes(arr, i, j - 1); // Highlight current comparison for boxes
+						createBars(arr, i); // Highlight current comparison for bars
+						await new Promise((resolve) => setTimeout(resolve, 500)); // Delay
+						i--;
+					}
+
+					arr[i + 1] = key;
+					createBoxes(arr, -1, j); // Update sorted portion for boxes
+					createBars(arr); // Update bars after placing the key
+					await new Promise((resolve) => setTimeout(resolve, 500)); // Delay
+				}
+			}
+
+			// Function to handle the array size change
+			function handleArraySizeChange() {
+				const size = parseInt(arraySizeSelect.value);
+				const newArray = generateRandomArray(size);
+
+				// Reset visualizations without starting the sort
+				createBoxes(newArray);
+				createBars(newArray);
+
+				return newArray;
+			}
+
+			// Function to start visualization when the "Visualize" button is clicked
+			function startVisualization() {
+				const size = parseInt(arraySizeSelect.value);
+				const newArray = generateRandomArray(size);
+
+				// Reset visualizations
+				createBoxes(newArray);
+				createBars(newArray);
+
+				// Start sorting with the new array
+				insertionSort(newArray);
+			}
+
+			// Listen for changes in array size
+			arraySizeSelect.addEventListener("change", handleArraySizeChange);
+
+			// Start visualization when the "Visualize" button is clicked
+			visualizeBtn.addEventListener("click", startVisualization);
+
+			// Initialize the page with a default random array of size 6
+			handleArraySizeChange();
+		</script>
+	</body>
+</html>
